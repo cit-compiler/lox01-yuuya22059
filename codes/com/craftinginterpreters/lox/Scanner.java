@@ -130,11 +130,10 @@ public class Scanner {
 
     private void identifier() {
         while (isAlphaNumeric(peek())) advance();
-
         String text = source.substring(start, current);
         TokenType type = keywords.get(text);
         if (type == null) type = IDENTIFIER;
-        addToken(IDENTIFIER);
+        addToken(type);
     }
 
     private void number() {
@@ -151,21 +150,31 @@ public class Scanner {
     }
 
     private void string() {
-        while (peek() != '"' && !isAtEnd()) {
-            if (peek() == '\n')
+        while (!isAtEnd()) {
+            if (peek() == '\n'){
                 line++;
-            advance();
+            }
+
+            if (peek() == '\\' && peekNext() == '"'){
+                advance();
+                advance();
+            }else if (peek() == '"'){
+                break;
+            }else{
+                advance();
+            }
+
+            
         }
 
         if (isAtEnd()) {
             Lox.error(line, "Unterminated string.");
             return;
         }
-
         advance();
 
         String value = source.substring(start + 1, current - 1);
-        addToken(STRING, value);
+        addToken(STRING, value.replace("\\\"", "\""));
     }
 
     private boolean match(char expected) {
