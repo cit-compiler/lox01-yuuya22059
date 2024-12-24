@@ -5,8 +5,8 @@ import java.util.List;
 import static com.craftinginterpreters.lox.TokenType.*;
 
 class Parser {
-private static class ParseError extends RuntimeException {}
-//6-6-3の手前までやった
+    private static class ParseError extends RuntimeException {
+    }
 
     private final List<Token> tokens;
     private int current = 0;
@@ -86,9 +86,12 @@ private static class ParseError extends RuntimeException {}
     }
 
     private Expr primary() {
-        if (match(FALSE)) return new Expr.Literal(false);
-        if (match(TRUE)) return new Expr.Literal(true);
-        if (match(NIL)) return new Expr.Literal(null);
+        if (match(FALSE))
+            return new Expr.Literal(false);
+        if (match(TRUE))
+            return new Expr.Literal(true);
+        if (match(NIL))
+            return new Expr.Literal(null);
 
         if (match(NUMBER, STRING)) {
             return new Expr.Literal(previous().literal);
@@ -96,7 +99,7 @@ private static class ParseError extends RuntimeException {}
 
         if (match(LEFT_PAREN)) {
             Expr expr = expression();
-            consume(RIGHT_PAREN, "Expected ')' after expression");
+            consume(RIGHT_PAREN, "Expect ')' after expression.");
             return new Expr.Grouping(expr);
         }
 
@@ -114,19 +117,15 @@ private static class ParseError extends RuntimeException {}
         return false;
     }
 
-    private Token consume(TokenType type, String message) {
-        if (check(type)) return advance();
-
-        throw error(peek(), message);
-    }
-
     private boolean check(TokenType type) {
-        if (isAtEnd()) return false;
+        if (isAtEnd())
+            return false;
         return peek().type == type;
     }
 
     private Token advance() {
-        if (!isAtEnd()) current++;
+        if (!isAtEnd())
+            current++;
         return previous();
     }
 
@@ -142,6 +141,13 @@ private static class ParseError extends RuntimeException {}
         return tokens.get(current - 1);
     }
 
+    private Token consume(TokenType type, String message) {
+        if (check(type))
+            return advance();
+
+        throw error(peek(), message);
+    }
+
     private ParseError error(Token token, String message) {
         Lox.error(token, message);
         return new ParseError();
@@ -151,7 +157,8 @@ private static class ParseError extends RuntimeException {}
         advance();
 
         while (!isAtEnd()) {
-            if (previous().type == SEMICOLON) return;
+            if (previous().type == SEMICOLON)
+                return;
 
             switch (peek().type) {
                 case CLASS:
@@ -167,5 +174,22 @@ private static class ParseError extends RuntimeException {}
 
             advance();
         }
+    }
+}
+
+class Lox {
+    static boolean hadError = false;
+
+    static void error(Token token, String message) {
+        if (token.type == TokenType.EOF) {
+            report(token.line, " at end", message);
+        } else {
+            report(token.line, " at '" + token.lexeme + "'", message);
+        }
+    }
+
+    private static void report(int line, String where, String message) {
+        System.err.println("[line " + line + "] Error" + where + ": " + message);
+        hadError = true;
     }
 }
